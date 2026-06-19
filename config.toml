@@ -1,0 +1,19 @@
+[app]
+title = "Транспорт домой"
+
+[schedule]
+# Для разработки выключено: приложение всегда показывает оверлей.
+# Для боевого режима поставь true и настрой active_from / active_to.
+enabled = false
+active_from = "18:30"
+active_to = "21:00"
+poll_seconds = 30
+inactive_check_seconds = 300
+
+[yandex]
+stop_ids = ["1543190229", "stop__1543190229"]
+routes = ["23", "28"]
+arrivals_per_route = 3
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+debug_dump_path = "last_yandex_reply.json"
+stop_page_url_template = "https://yandex.com/maps/10262/yerevan/stops/{stop_id}/?ll=44.533543%2C40.210894&tab=overview&z=18.25"
