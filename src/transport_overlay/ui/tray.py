@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QObject, QRect, Qt
+from PySide6.QtCore import QObject, QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
@@ -80,13 +80,23 @@ def make_tray_icon(text: str | None = None) -> QIcon:
 
     painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(cyan)
-    painter.drawRoundedRect(26, 26, 204, 204, 46, 46)
+    badge_rect = QRectF(26, 26, 204, 204)
+    painter.drawRoundedRect(badge_rect, 46, 46)
 
     if text:
+        text = text[:3]
         painter.setPen(dark)
         font_size = 118 if len(text) <= 2 else 88
-        painter.setFont(QFont("Segoe UI", font_size, QFont.Weight.Black))
-        painter.drawText(QRect(20, 28, 216, 196), Qt.AlignmentFlag.AlignCenter, text[:3])
+        font = QFont("Segoe UI", font_size, QFont.Weight.Black)
+        painter.setFont(font)
+
+        metrics = painter.fontMetrics()
+        text_rect = QRectF(metrics.tightBoundingRect(text))
+        baseline = QPointF(
+            badge_rect.center().x() - text_rect.center().x(),
+            badge_rect.center().y() - text_rect.center().y(),
+        )
+        painter.drawText(baseline, text)
 
     painter.end()
 

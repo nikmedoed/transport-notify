@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 import sys
 from datetime import datetime
 from html.parser import HTMLParser
@@ -64,38 +63,7 @@ def parse_thread_events(route: str, thread: dict[str, Any]) -> list[Arrival]:
     if arrivals:
         return arrivals
 
-    return parse_frequency_events(route, brief_schedule)
-
-
-def parse_frequency_events(route: str, brief_schedule: dict[str, Any]) -> list[Arrival]:
-    arrivals: list[Arrival] = []
-    now_timestamp = int(datetime.now().timestamp())
-
-    for frequency in brief_schedule.get("Frequencies") or []:
-        if not isinstance(frequency, dict):
-            continue
-
-        try:
-            step_seconds = int(frequency.get("value") or 0)
-            begin_timestamp = int((frequency.get("begin") or {}).get("value"))
-            end_timestamp = int((frequency.get("end") or {}).get("value"))
-        except (TypeError, ValueError):
-            continue
-
-        if step_seconds <= 0 or end_timestamp < now_timestamp:
-            continue
-
-        first_timestamp = begin_timestamp
-        if first_timestamp < now_timestamp:
-            steps = math.ceil((now_timestamp - begin_timestamp) / step_seconds)
-            first_timestamp = begin_timestamp + steps * step_seconds
-
-        timestamp = first_timestamp
-        while timestamp <= end_timestamp and len(arrivals) < 6:
-            arrivals.append(Arrival(route=route, text="", timestamp=timestamp))
-            timestamp += step_seconds
-
-    return arrivals
+    return []
 
 
 def parse_event(route: str, event: Any) -> Arrival | None:

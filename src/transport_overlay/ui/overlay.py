@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QSize, Qt, QTimer
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 from transport_overlay.config import AppConfig
@@ -116,10 +116,7 @@ class BusOverlay(QWidget):
             self.routes_layout.addWidget(row)
             self.route_rows.append(row)
 
-        self._refresh_layout_size()
-        self._place_bottom_left()
-        self.show()
-        self.raise_()
+        self._show_anchored()
 
     def show_error(self, message: str) -> None:
         self._clear_routes()
@@ -129,18 +126,20 @@ class BusOverlay(QWidget):
         label.setWordWrap(True)
         self.routes_layout.addWidget(label)
 
-        self._refresh_layout_size()
-        self._place_bottom_left()
-        self.show()
-        self.raise_()
+        self._show_anchored()
 
     def set_overlay_visible(self, visible: bool) -> None:
         if visible:
-            self._place_bottom_left()
-            self.show()
-            self.raise_()
+            self._show_anchored()
         else:
             self.hide()
+
+    def _show_anchored(self) -> None:
+        self._refresh_layout_size()
+        self.show()
+        self._place_bottom_left()
+        self.raise_()
+        QTimer.singleShot(0, self._place_bottom_left)
 
     def _clear_routes(self) -> None:
         while self.routes_layout.count():
@@ -162,14 +161,17 @@ class BusOverlay(QWidget):
         if screen is None:
             return
 
-        self.adjustSize()
-        x, y = self._bottom_left_position(screen)
+        self._refresh_layout_size()
+        x, y = self._bottom_left_position(screen, self.size())
         self.move(QPoint(x, y))
 
-    def _bottom_left_position(self, screen) -> tuple[int, int]:
-        full = screen.geometry()
-        x = full.left() + CORNER_MARGIN_LEFT
-        y = full.bottom() - self.height() - CORNER_MARGIN_BOTTOM + 1
+    def _bottom_left_position(self, screen, size: QSize) -> tuple[int, int]:
+        area = screen.geometry()
+        x = area.left() + CORNER_MARGIN_LEFT
+        y = area.bottom() - size.height() - CORNER_MARGIN_BOTTOM + 1
+
+        x = max(area.left(), min(x, area.right() - size.width() + 1))
+        y = max(area.top(), min(y, area.bottom() - size.height() + 1))
         return x, y
 
     def _anchor_screen(self):

@@ -1,0 +1,6 @@
+<svg width="74" height="47" viewBox="0 0 74 47" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="74" height="47" fill="#2f1f18"/>
+  <path d="M11 25L16 20L21 25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="37" y="16" width="13" height="13" rx="3" fill="#2dd4bf"/>
+  <text x="43.5" y="26" text-anchor="middle" fill="#031012" font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="900">2</text>
+</svg>

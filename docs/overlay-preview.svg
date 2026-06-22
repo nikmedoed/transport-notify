@@ -1,0 +1,10 @@
+<svg width="116" height="50" viewBox="0 0 116 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="116" height="50" fill="#2f1f18"/>
+  <rect x="3" y="6" width="98" height="38" rx="5" fill="#141618" fill-opacity="0.72" stroke="white" stroke-opacity="0.08"/>
+  <text x="8" y="22" fill="white" fill-opacity="0.9" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="900">28:</text>
+  <text x="35" y="22" fill="#2dd4bf" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="900">2</text>
+  <text x="45" y="22" fill="white" fill-opacity="0.86" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="800">, 12, 26</text>
+  <text x="8" y="39" fill="white" fill-opacity="0.9" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="900">23:</text>
+  <text x="35" y="39" fill="#2dd4bf" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="900">4</text>
+  <text x="45" y="39" fill="white" fill-opacity="0.86" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="800">, 10</text>
+</svg>
