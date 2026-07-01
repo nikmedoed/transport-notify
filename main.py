@@ -29,6 +29,8 @@ def main() -> int:
     poller.error_ready.connect(tray.update_error)
     poller.visibility_changed.connect(overlay.set_overlay_visible)
     poller.status_ready.connect(tray.update_status)
+    poller.manual_tracking_changed.connect(tray.update_manual_tracking)
+    tray.manual_tracking_requested.connect(poller.toggle_manual_tracking)
 
     app.aboutToQuit.connect(poller.stop)
     poller.start()

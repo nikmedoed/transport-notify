@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 
 from PySide6.QtCore import QPoint, QSize, Qt, QTimer
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 from transport_overlay.config import AppConfig
@@ -13,7 +14,7 @@ from transport_overlay.models import Arrival, ArrivalSnapshot
 CORNER_MARGIN_BOTTOM = 2
 CORNER_MARGIN_LEFT = 2
 BACKGROUND_ALPHA = 142
-ROW_HEIGHT = 17
+ROW_HEIGHT = 16
 
 
 class RouteRow(QFrame):
@@ -23,18 +24,13 @@ class RouteRow(QFrame):
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(ROW_HEIGHT)
 
-        route_label = QLabel(route)
+        route_label = QLabel(f"{route}:")
         route_label.setObjectName("routeNumber")
-        route_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        route_label.setFixedSize(21, ROW_HEIGHT)
-
-        separator_label = QLabel(":")
-        separator_label.setObjectName("separator")
-        separator_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        separator_label.setFixedSize(4, ROW_HEIGHT)
+        route_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        route_label.setFixedSize(24, ROW_HEIGHT)
 
         times_layout = QHBoxLayout()
-        times_layout.setContentsMargins(3, 0, 0, 0)
+        times_layout.setContentsMargins(0, 0, 0, 0)
         times_layout.setSpacing(0)
         add_time_labels(times_layout, arrivals)
 
@@ -42,7 +38,6 @@ class RouteRow(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(route_label, alignment=Qt.AlignmentFlag.AlignVCenter)
-        layout.addWidget(separator_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(times_layout)
 
 
@@ -95,10 +90,10 @@ class BusOverlay(QWidget):
 
         self.routes_layout = QVBoxLayout()
         self.routes_layout.setContentsMargins(0, 0, 0, 0)
-        self.routes_layout.setSpacing(1)
+        self.routes_layout.setSpacing(0)
 
         shell_layout = QVBoxLayout(self.shell)
-        shell_layout.setContentsMargins(2, 0, 2, 5)
+        shell_layout.setContentsMargins(4, 2, 5, 3)
         shell_layout.setSpacing(0)
         shell_layout.addLayout(self.routes_layout)
 
@@ -176,8 +171,19 @@ class BusOverlay(QWidget):
 
     def _anchor_screen(self):
         screens = QApplication.screens()
+        if self.isVisible():
+            screen = QApplication.screenAt(self.frameGeometry().center())
+            if screen is not None:
+                self.anchor_screen = screen
+                return screen
+
         if self.anchor_screen in screens:
             return self.anchor_screen
+
+        screen = QApplication.screenAt(QCursor.pos())
+        if screen is not None:
+            self.anchor_screen = screen
+            return screen
 
         self.anchor_screen = QApplication.primaryScreen()
         return self.anchor_screen
@@ -191,27 +197,22 @@ class BusOverlay(QWidget):
         }}
         #routeNumber {{
             color: rgba(255, 255, 255, 215);
-            font: 900 13px "Segoe UI";
-            background: transparent;
-        }}
-        #separator {{
-            color: rgba(255, 255, 255, 155);
-            font: 800 12px "Segoe UI";
+            font: 900 12px "Segoe UI";
             background: transparent;
         }}
         #nearestTime {{
             color: #2dd4bf;
-            font: 900 12px "Segoe UI";
+            font: 400 12px "Segoe UI";
             background: transparent;
         }}
         #time {{
             color: rgba(255, 255, 255, 210);
-            font: 800 12px "Segoe UI";
+            font: 400 12px "Segoe UI";
             background: transparent;
         }}
         #comma {{
             color: rgba(255, 255, 255, 135);
-            font: 800 12px "Segoe UI";
+            font: 400 12px "Segoe UI";
             background: transparent;
         }}
         #mutedTime {{

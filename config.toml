@@ -4,7 +4,8 @@ title = "Транспорт домой"
 [schedule]
 # Для разработки выключено: приложение всегда показывает оверлей.
 # Для боевого режима поставь true и настрой active_from / active_to.
-enabled = false
+enabled = true
+#enabled = false
 active_from = "18:30"
 active_to = "21:00"
 poll_seconds = 30
