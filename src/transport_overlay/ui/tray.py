@@ -4,6 +4,7 @@ from PySide6.QtCore import QObject, QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+from transport_overlay.autostart import UserSettings, set_autostart_enabled
 from transport_overlay.config import AppConfig
 from transport_overlay.formatting import arrival_label, tray_label
 from transport_overlay.models import ArrivalSnapshot
@@ -13,11 +14,18 @@ from transport_overlay.ui.overlay import BusOverlay
 class TrayController(QObject):
     manual_tracking_requested = Signal()
 
-    def __init__(self, app: QApplication, overlay: BusOverlay, config: AppConfig) -> None:
+    def __init__(
+        self,
+        app: QApplication,
+        overlay: BusOverlay,
+        config: AppConfig,
+        user_settings: UserSettings,
+    ) -> None:
         super().__init__()
         self.app = app
         self.overlay = overlay
         self.config = config
+        self.user_settings = user_settings
         self.last_snapshot: ArrivalSnapshot | None = None
 
         self.tray = QSystemTrayIcon(self)
@@ -28,6 +36,10 @@ class TrayController(QObject):
         self.manual_tracking_action = self.menu.addAction("Отслеживать сейчас")
         self.manual_tracking_action.setCheckable(True)
         self.manual_tracking_action.triggered.connect(lambda _checked=False: self._request_manual_tracking())
+        self.autostart_action = self.menu.addAction("Автозапуск")
+        self.autostart_action.setCheckable(True)
+        self.autostart_action.setChecked(user_settings.autostart_enabled)
+        self.autostart_action.triggered.connect(self._set_autostart)
         quit_action = self.menu.addAction("Выход")
         quit_action.triggered.connect(app.quit)
 
@@ -61,6 +73,10 @@ class TrayController(QObject):
 
     def _request_manual_tracking(self) -> None:
         self.manual_tracking_requested.emit()
+
+    def _set_autostart(self, checked: bool) -> None:
+        self.user_settings = set_autostart_enabled(checked)
+        self.autostart_action.setChecked(self.user_settings.autostart_enabled)
 
     def _activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         if reason in (

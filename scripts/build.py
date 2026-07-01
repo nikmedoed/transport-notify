@@ -65,6 +65,8 @@ def build_target(name: str, entry: Path, *, onedir: bool) -> None:
         "--name",
         name,
         "--windowed",
+        "--icon",
+        str(ROOT / "assets" / "transportation-overlay.ico"),
         "--paths",
         str(ROOT / "src"),
         "--collect-all",

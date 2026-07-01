@@ -46,7 +46,8 @@ class ConfigError(RuntimeError):
 
 
 def default_config_paths() -> tuple[Path, ...]:
-    paths = [CONFIG_PATH]
+    source_config_path = Path(__file__).resolve().parents[2] / CONFIG_PATH
+    paths = [CONFIG_PATH, source_config_path]
     if getattr(sys, "frozen", False):
         paths.append(Path(sys.executable).resolve().parent / CONFIG_PATH)
         bundle_dir = getattr(sys, "_MEIPASS", None)
