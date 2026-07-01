@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import tomllib
 from dataclasses import dataclass
 from datetime import time
@@ -44,9 +45,31 @@ class ConfigError(RuntimeError):
     pass
 
 
+def default_config_paths() -> tuple[Path, ...]:
+    paths = [CONFIG_PATH]
+    if getattr(sys, "frozen", False):
+        paths.append(Path(sys.executable).resolve().parent / CONFIG_PATH)
+        bundle_dir = getattr(sys, "_MEIPASS", None)
+        if bundle_dir:
+            paths.append(Path(bundle_dir) / CONFIG_PATH)
+    return tuple(dict.fromkeys(paths))
+
+
+def resolve_config_path(path: Path = CONFIG_PATH) -> Path:
+    if path != CONFIG_PATH:
+        return path
+
+    for candidate in default_config_paths():
+        if candidate.exists():
+            return candidate
+    return path
+
+
 def load_config(path: Path = CONFIG_PATH) -> AppConfig:
+    path = resolve_config_path(path)
     if not path.exists():
-        raise ConfigError(f"Не найден конфиг: {path.resolve()}")
+        checked = ", ".join(str(item.resolve()) for item in default_config_paths())
+        raise ConfigError(f"Не найден конфиг. Проверенные пути: {checked}")
 
     raw = tomllib.loads(path.read_text(encoding="utf-8"))
     app = raw.get("app", {})

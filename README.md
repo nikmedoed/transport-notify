@@ -25,6 +25,41 @@ uv sync
 uv run python main.py
 ```
 
+## Сборка exe
+
+Для локальной сборки Windows-исполняемого файла нужен Python 3.11+.
+
+```powershell
+.\build.ps1
+```
+
+Скрипт установит зависимости проекта и `PyInstaller`, затем соберет приложение в:
+
+```text
+dist\TransportationOverlay.exe
+```
+
+Если нужен вариант папкой, а не одним большим exe:
+
+```powershell
+.\build.ps1 -OneDir
+```
+
+После сборки рядом с exe можно положить свой `config.toml`. При запуске приложение сначала ищет конфиг в текущей папке, затем рядом с exe. Если внешний конфиг не найден, используется `config.toml`, упакованный в сборку.
+
+## Автосборка на GitHub
+
+В репозитории есть workflow `.github/workflows/release.yml`. Он собирает Windows x64 exe и публикует его в GitHub Release.
+
+Автоматический релиз запускается при пуше тега вида `v0.1.0`:
+
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Также сборку можно запустить вручную в GitHub Actions через `workflow_dispatch`, указав тег, например `v0.1.0`.
+
 ## Настройка
 
 Основное лежит в `config.toml`:
