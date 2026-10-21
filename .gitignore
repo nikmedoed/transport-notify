@@ -180,3 +180,4 @@ dist-ssr
 *.sln
 *.sw?
 uv.lock
+last_yandex_reply.json

@@ -2,18 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 from datetime import datetime, timedelta
 
 from PySide6.QtCore import QObject, Signal
 
 from transport_overlay.config import AppConfig
-from transport_overlay.models import ArrivalSnapshot
+from transport_overlay.models import ArrivalSnapshot, TrafficReading, TrafficSnapshot
 from transport_overlay.schedule import is_active_now, seconds_until_transition
 from transport_overlay.yandex_live import fetch_yandex_snapshot
+from transport_overlay.traffic import fetch_traffic_snapshot
 
 
 class BusPoller(QObject):
     snapshot_ready = Signal(object)
+    traffic_ready = Signal(object)
     error_ready = Signal(str)
     visibility_changed = Signal(bool)
     status_ready = Signal(str)
@@ -29,6 +32,7 @@ class BusPoller(QObject):
         if self._last_schedule_active:
             self._tracking_enabled_event.set()
         self._thread: threading.Thread | None = None
+        self._next_traffic_poll = 0.0
 
     def start(self) -> None:
         if self._thread is not None:
@@ -81,6 +85,7 @@ class BusPoller(QObject):
 
     def _set_tracking_enabled(self, enabled: bool, source: str, wake: bool) -> None:
         if enabled:
+            self._next_traffic_poll = 0.0
             self._tracking_enabled_event.set()
         else:
             self._tracking_enabled_event.clear()
@@ -103,6 +108,23 @@ class BusPoller(QObject):
         )
 
     async def _poll_once(self) -> None:
+        await asyncio.gather(self._poll_arrivals(), self._poll_traffic())
+
+    async def _poll_traffic(self) -> None:
+        if not self.config.traffic.enabled or time.monotonic() < self._next_traffic_poll:
+            return
+        try:
+            snapshot = await asyncio.to_thread(fetch_traffic_snapshot, self.config.traffic)
+        except Exception as error:
+            snapshot = TrafficSnapshot(
+                tuple(TrafficReading(point.name, error=str(error)) for point in self.config.traffic.points),
+                datetime.now(),
+            )
+        self._next_traffic_poll = time.monotonic() + self.config.traffic.poll_seconds
+        if self._tracking_enabled_event.is_set():
+            self.traffic_ready.emit(snapshot)
+
+    async def _poll_arrivals(self) -> None:
         try:
             snapshot = await self.fetch_snapshot()
             if not self._tracking_enabled_event.is_set():

@@ -18,3 +18,22 @@ arrivals_per_route = 3
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 debug_dump_path = "last_yandex_reply.json"
 stop_page_url_template = "https://yandex.com/maps/10262/yerevan/stops/{stop_id}/?ll=44.533543%2C40.210894&tab=overview&z=18.25"
+
+[traffic]
+enabled = true
+poll_seconds = 120
+
+[[traffic.points]]
+name = "Паруйра Севака"
+latitude = 40.202858
+longitude = 44.543535
+
+[[traffic.points]]
+name = "Рубинянц"
+latitude = 40.203878
+longitude = 44.551437
+
+[[traffic.points]]
+name = "Рубинянц — развязка"
+latitude = 40.206701
+longitude = 44.559645

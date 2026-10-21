@@ -51,6 +51,7 @@ def main() -> int:
     poller = BusPoller(config)
 
     poller.snapshot_ready.connect(overlay.show_snapshot)
+    poller.traffic_ready.connect(overlay.show_traffic)
     poller.snapshot_ready.connect(tray.update_snapshot)
     poller.error_ready.connect(overlay.show_error)
     poller.error_ready.connect(tray.update_error)

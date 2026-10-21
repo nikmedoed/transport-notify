@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 
 from PySide6.QtCore import QPoint, QSize, Qt, QTimer
 from PySide6.QtGui import QCursor
@@ -8,13 +9,61 @@ from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QSizePo
 
 from transport_overlay.config import AppConfig
 from transport_overlay.formatting import arrival_label
-from transport_overlay.models import Arrival, ArrivalSnapshot
+from transport_overlay.models import Arrival, ArrivalSnapshot, TrafficReading, TrafficSnapshot
 
 
 CORNER_MARGIN_BOTTOM = 2
 CORNER_MARGIN_LEFT = 2
 BACKGROUND_ALPHA = 142
 ROW_HEIGHT = 16
+
+TRAFFIC_COLORS = {
+    "green": "#5ecd4c", "yellow": "#ffe500", "orange": "#ffbb33",
+    "red": "#e65a46", "darkred": "#8f351e", None: "#737982",
+}
+
+
+class TrafficIndicator(QWidget):
+    def __init__(self, config: AppConfig) -> None:
+        super().__init__()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(7, 0, 0, 0)
+        layout.setSpacing(5)
+        self.average = QLabel("—")
+        self.average.setObjectName("trafficAverage")
+        self.average.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.average.setFixedWidth(24)
+        layout.addWidget(self.average)
+        column = QVBoxLayout()
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(3)
+        self.dots = []
+        for point in config.traffic.points:
+            dot = QLabel()
+            dot.setFixedSize(7, 7)
+            dot.setToolTip(point.name)
+            column.addWidget(dot)
+            self.dots.append(dot)
+        layout.addLayout(column)
+        self.update_snapshot(TrafficSnapshot(
+            tuple(TrafficReading(point.name, error="Ожидание данных") for point in config.traffic.points), datetime.now()
+        ))
+
+    def update_snapshot(self, snapshot: TrafficSnapshot) -> None:
+        average = snapshot.average
+        self.average.setText("—" if average is None else f"{average:.1f}")
+        details = ["Яндекс Пробки · " + snapshot.updated_at.strftime("%H:%M"),
+                   "Средняя приблизительная оценка по цветам: зелёный 1, жёлтый 4, оранжевый 7, красный 9, бордовый 10.",
+                   "Это оценка трёх точек, не официальный балл Яндекса по городу."]
+        for dot, reading in zip(self.dots, snapshot.readings):
+            dot.setStyleSheet(f"background: {TRAFFIC_COLORS.get(reading.level, TRAFFIC_COLORS[None])}; border-radius: 3px;")
+            detail = f"{reading.name}: " + (f"≈{reading.score}/10" if reading.score is not None else "нет данных")
+            if reading.error:
+                detail += f" ({reading.error})"
+            dot.setToolTip(detail)
+            details.append(detail)
+        self.setToolTip("\n".join(details))
+        self.average.setToolTip("\n".join(details))
 
 
 class RouteRow(QFrame):
@@ -92,10 +141,13 @@ class BusOverlay(QWidget):
         self.routes_layout.setContentsMargins(0, 0, 0, 0)
         self.routes_layout.setSpacing(0)
 
-        shell_layout = QVBoxLayout(self.shell)
+        shell_layout = QHBoxLayout(self.shell)
         shell_layout.setContentsMargins(4, 2, 5, 3)
         shell_layout.setSpacing(0)
         shell_layout.addLayout(self.routes_layout)
+        self.traffic_indicator = TrafficIndicator(config) if config.traffic.enabled else None
+        if self.traffic_indicator is not None:
+            shell_layout.addWidget(self.traffic_indicator, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -122,6 +174,10 @@ class BusOverlay(QWidget):
         self.routes_layout.addWidget(label)
 
         self._show_anchored()
+
+    def show_traffic(self, snapshot: TrafficSnapshot) -> None:
+        if self.traffic_indicator is not None:
+            self.traffic_indicator.update_snapshot(snapshot)
 
     def set_overlay_visible(self, visible: bool) -> None:
         if visible:
@@ -218,6 +274,11 @@ class BusOverlay(QWidget):
         #mutedTime {{
             color: rgba(255, 255, 255, 100);
             font: 800 12px "Segoe UI";
+            background: transparent;
+        }}
+        #trafficAverage {{
+            color: rgba(255, 255, 255, 215);
+            font: 600 12px "Segoe UI";
             background: transparent;
         }}
         """

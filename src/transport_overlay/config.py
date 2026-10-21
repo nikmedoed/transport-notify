@@ -35,10 +35,25 @@ class YandexConfig:
 
 
 @dataclass(frozen=True)
+class TrafficPointConfig:
+    name: str
+    latitude: float
+    longitude: float
+
+
+@dataclass(frozen=True)
+class TrafficConfig:
+    enabled: bool = False
+    poll_seconds: int = 120
+    points: tuple[TrafficPointConfig, ...] = ()
+
+
+@dataclass(frozen=True)
 class AppConfig:
     title: str
     schedule: ScheduleConfig
     yandex: YandexConfig
+    traffic: TrafficConfig = TrafficConfig()
 
 
 class ConfigError(RuntimeError):
@@ -76,9 +91,24 @@ def load_config(path: Path = CONFIG_PATH) -> AppConfig:
     app = raw.get("app", {})
     schedule = raw.get("schedule", {})
     yandex = raw.get("yandex", {})
+    traffic = raw.get("traffic", {})
+    points = tuple(
+        TrafficPointConfig(str(point["name"]), float(point["latitude"]), float(point["longitude"]))
+        for point in traffic.get("points", [])
+    )
+    if traffic.get("enabled", False) and len(points) != 3:
+        raise ConfigError("Для traffic.enabled нужны ровно три traffic.points")
+    for point in points:
+        if not (-85 <= point.latitude <= 85 and -180 <= point.longitude <= 180):
+            raise ConfigError(f"Неверные координаты traffic.points: {point.name}")
 
     return AppConfig(
         title=str(app.get("title", "Транспорт")),
+        traffic=TrafficConfig(
+            enabled=bool(traffic.get("enabled", False)),
+            poll_seconds=max(60, int(traffic.get("poll_seconds", 120))),
+            points=points,
+        ),
         schedule=ScheduleConfig(
             enabled=bool(schedule.get("enabled", False)),
             active_from=parse_hhmm(str(schedule.get("active_from", "18:30"))),

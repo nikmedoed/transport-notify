@@ -5,6 +5,30 @@ from datetime import datetime
 
 
 @dataclass(frozen=True)
+class TrafficReading:
+    name: str
+    level: str | None = None
+    error: str | None = None
+
+    @property
+    def score(self) -> int | None:
+        return {"green": 1, "yellow": 4, "orange": 7, "red": 9, "darkred": 10}.get(self.level)
+
+
+@dataclass(frozen=True)
+class TrafficSnapshot:
+    readings: tuple[TrafficReading, ...]
+    updated_at: datetime
+
+    @property
+    def average(self) -> float | None:
+        scores = [reading.score for reading in self.readings]
+        if not scores or any(score is None for score in scores):
+            return None
+        return sum(scores) / len(scores)
+
+
+@dataclass(frozen=True)
 class Arrival:
     route: str
     text: str
